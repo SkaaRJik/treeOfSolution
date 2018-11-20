@@ -35,8 +35,9 @@ public class TreeBuilder {
                 tree.push(nodes[j][3]);
             }
             for (int j = 0; j < nodes.length; j++) {
-                tree.push(nodes[j][1]);
+                tree.push(nodes[j][2]);
             }
+            tree.calculateIGToKnowBestTreeToStart();
         }
     }
 

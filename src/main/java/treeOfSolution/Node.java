@@ -12,7 +12,9 @@ public class Node implements Cloneable{
     private int example;
     private int level;
     private List< List< List< Node > > > ierarchy;
-
+    private float E0;
+    private float E;
+    private float IG;
     private int countOfAttributes;
 
 
@@ -26,6 +28,7 @@ public class Node implements Cloneable{
         this.attributes = new HashSet<>();
         this.attributes.add(attributeName);
         this.children = new ArrayList<>();
+        float E0;
     }
 
     @Override
@@ -35,84 +38,40 @@ public class Node implements Cloneable{
     }
 
 
-        /*void push(Node newNode, Boolean stop){
-            if(this.children.get(0) != null){
-                if(this.children.get(0).attributeName.equals(newNode.attributeName)){
-                    for (Node child: this.children) {
-                        if(child.label.equals(newNode.label)){
-                            this.examples.add(newNode.example);
-                            return;
-                        }
-                    }
-                    newNode.examples.add(newNode.example);
-                    children.add(newNode);
-                    return;
-                } else {
-                    if(!stop.booleanValue()) {
-                        for (Node child : this.children) {
-                            if(stop.booleanValue()) return;
-                            if (child.label.equals(newNode.label)) {
-                                this.examples.add(newNode.example);
-                                return;
-                            }
-                        }
-                    }
-                }
+    public float calculateIGToKnowBestTreeToStart(){
+        float value = 0;
 
+        if(this.attributes.size() == 2){
+            E0 = 0;
+            float p;
+            for(Node child : children){
+                p = (float) child.examples.size() / this.examples.size();
+                E0 += (Math.log10(p) * p);
             }
-        }*/
-
-        /*Node findNodeWithChildrenByAttributeName(String attributeName){
-            Node node = null;
-                if(this.attributes.size() == 2 &  this.attributes.contains(attributeName)) return this;
-                if(children != null) {
-                    if(!children.isEmpty())
-                        if(children.get(0).children.contains(attributeName))
-                            for(Node child : this.children)
-                            node = children.get(0).findNodeWithChildrenByAttributeName(attributeName);
-                }
-            return node;
-        }
-
-        void addExampleToParrents(Integer example){
-            if(this.parent != null) {
-                this.parent.examples.add(example);
-                this.parent.addExampleToParrents(example);
-            }
-        }
-
-        public void push(Node newNode){
-            //Если аттрибут уже есть в дереве, то нужно добавить пример в нужный аттрибут и в нужный класс
-            if(attributes.contains(newNode.attributeName)){
-                Node node = this.findNodeWithChildrenByAttributeName(newNode.attributeName);
-                if(node != null){
-                    //Если такой класс уже существует, то просто добавляем пример в узел, и дополняем родительские примеры
-                    for(Node child : node.children){
-                        if(child.label.equals(newNode.label)){
-                            child.examples.add(newNode.example);
-                            child.addExampleToParrents(newNode.example);
-                            return;
-                        }
+            E0 *= -1;
+            for(Node child : children){
+                child.E = 0;
+                if(child.children.size() == 1) {continue;}
+                else {
+                    for (Node postChild : child.children) {
+                        p = (float) postChild.examples.size() / child.examples.size();
+                        child.E += Math.log10(p) * p;
                     }
-                    //___________________________________________________________________________
-                    //Если узла с таким классом нет, то нужно добавить класс в качестве дочернего
-                    newNode.examples.add(example);
-                    newNode.parent = node;
-                    newNode.level = newNode.parent.level+1;
-                    node.children.add(newNode);
-                    newNode.addExampleToParrents(newNode.example);
-                    //___________________________________________________________________________
-
+                    child.E *= -1;
                 }
             }
-            else{
-
+            for(Node child : children){
+                value += child.E * (float) child.examples.size() / this.examples.size();
             }
+
         }
 
-        public void addNewNodeWithNewClass(){
+        return E0 - value;
+    }
 
-        }*/
+    public double log(float x, int base) {
+        return (Math.log(x) / Math.log(base));
+    }
 
     @Override
     public boolean equals(Object o) {
