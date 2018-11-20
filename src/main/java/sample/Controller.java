@@ -8,6 +8,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TitledPane;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
+import treeOfSolution.TreeBuilder;
 import utils.DataFactory;
 
 import java.io.File;
@@ -29,7 +30,8 @@ public class Controller {
         File file = fileChooser.showOpenDialog(accordion.getScene().getWindow());
         if (file != null) {
             try {
-                DataFactory.readUsingFileReader(file, StandardCharsets.UTF_8);
+                TreeBuilder treeBuilder = new TreeBuilder();
+                treeBuilder.run(DataFactory.readUsingFileReader(file, StandardCharsets.UTF_8));
             } catch (IOException e) {
                 e.printStackTrace();
             }

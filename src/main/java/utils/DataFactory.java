@@ -1,5 +1,7 @@
 package utils;
 
+import treeOfSolution.Node;
+
 import java.io.*;
 import java.nio.charset.Charset;
 
@@ -23,6 +25,19 @@ public class DataFactory {
 
         br.close();
         return data;
+    }
+
+    public static Node[][] convertDataToNode(String[][] data){
+        Node[][] nodes = new Node[data.length-1][data[0].length];
+
+        for (int i = 0; i < data.length-1; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                nodes[i][j] = new Node(data[0][j], data[i+1][j], i+1, data[0].length);
+            }
+        }
+
+
+        return nodes;
     }
 
 }
