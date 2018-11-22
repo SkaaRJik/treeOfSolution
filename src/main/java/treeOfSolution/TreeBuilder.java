@@ -9,37 +9,62 @@ public class TreeBuilder {
     Node tree;
 
     public TreeBuilder() {
+        this.tree = null;
     }
 
     public Node getTree() {
         return tree;
     }
 
-    void dataByPass(String[][] data){
-        for (int i = 0; i < data[0].length; i++) {
-            Map< String, List<String>> zippedData = new HashMap<String, List<String>>();
-            List<String> line = new ArrayList<String>(data[0].length);
-            for (int j = 1; j < data[i].length; j++) {
-                //line.add(data[])
-            }
-            //zippedData.put(data[0][j], )
-        }
-    }
-
     public void run(String[][] data){
         Node[][] nodes = DataFactory.convertDataToNode(data);
+        int countOfTrees = data[0].length * data[0].length-1;
+        List<Node> trees = new ArrayList<>();
+            //if(tree == null) tree = nodes[0][3];
 
-        for (int i = 0; i < 1; i++) {
-            if(tree == null) tree = nodes[0][3];
-            for (int j = 0; j < nodes.length; j++) {
-                tree.push(nodes[j][3]);
+            for(int k = 0 ; k < countOfTrees; k++) {
+                Node tree = null;
+                int afterHead = 0;
+                for (int j = 0; j < nodes[0].length; j++) {
+                    for (int i = 0; i < nodes.length; i++) {
+                        if(tree == null) {
+                            try {
+                                tree = (Node) nodes[j][i].clone();
+                            } catch (CloneNotSupportedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                    for (int l = 0; l < nodes.length; l++) {
+                        if(tree == null) {
+                            try {
+                                tree = (Node) nodes[j][i].clone();
+                            } catch (CloneNotSupportedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+
+                }
             }
-            for (int j = 0; j < nodes.length; j++) {
-                tree.push(nodes[j][2]);
+
+        }
+            /*for (int j = 0; j < nodes.length; j++) {
+                for (int k = 0; k < nodes[0].length; k++) {
+
+                }
+                if(tree == null) {
+                    try {
+                        //tree = (Node) nodes[j][i].clone();
+                    } catch (CloneNotSupportedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                //tree.push(nodes[j][i]);
             }
-            tree.calculateIGToKnowBestTreeToStart();
+            trees.add(tree);*/
+            /*if(this.tree == null) this.tree = tree;
+            if(this.tree.calculateIGToKnowBestTreeToStart() < tree.calculateIGToKnowBestTreeToStart()) this.tree = tree;
+*/
         }
     }
-
-
-}

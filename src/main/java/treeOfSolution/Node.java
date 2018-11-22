@@ -90,76 +90,82 @@ public class Node implements Cloneable{
     }
 
     public void push(Node newNode){
-        //Для головы
-        if(this.parent == null && this.children.isEmpty() && this.equals(newNode)){
-            try {
-                    /*newNode.attributes = new ArrayList<>(this.countOfAttributes);
-                    newNode.attributes.add(newNode.attributeName);*/
+        try {
+            Node copyNewNode = (Node) newNode.clone();
 
-                Node copyNode = (Node) newNode.clone();
-                copyNode.parent = newNode;
+            //Для головы
+            if(this.parent == null && this.children.isEmpty() && this.equals(newNode)){
+                try {
+                        /*newNode.attributes = new ArrayList<>(this.countOfAttributes);
+                        newNode.attributes.add(newNode.attributeName);*/
 
-                newNode.level = 0;
-                copyNode.level = 1;
+                    Node copyNode = (Node) this.clone();
+                    copyNode.parent = this;
 
-                newNode.label = "HEAD";
+                    this.level = 0;
+                    copyNode.level = 1;
 
-                    /*newNode.examples.add(newNode.example);
-                    copyNode.examples.add(copyNode.example);*/
+                    this.label = "HEAD";
 
-                this.children.add(copyNode);
-                return;
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-            }
-        }
-        //Добавочные узлы к корню
-        if(this.parent == null && !this.children.isEmpty() && !this.examples.contains(newNode.example)){
-            if(this.children.get(0).attributeName.equals(newNode.attributeName)) {
-                for (Node child : children) {
-                    if (child.label.equals(newNode.label)) {
-                        child.examples.add(newNode.example);
-                        child.parent.examples.add(newNode.example);
-                        return;
-                    }
+                        /*copyNewNode.examples.add(copyNewNode.example);
+                        copyNode.examples.add(copyNode.example);*/
+
+                    this.children.add(copyNode);
+                    return;
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
                 }
-                newNode.parent = this;
-                newNode.parent.examples.add(newNode.example);
-                newNode.level = newNode.parent.level+1;
-                this.children.add(newNode);
-                return;
             }
-        }
-        //Пошло добавление
-        //Если аттрибут уже есть в дереве, то нужно добавить пример в нужный аттрибут и в нужный класс
-        if(attributes.contains(newNode.attributeName)){
-            Node node = this.findParentForNewNode(newNode);
-            if(node != null){
-                //Если такой класс уже существует, то просто добавляем пример в узел, и дополняем родительские примеры
-                if(!children.isEmpty()) {
-                    for (Node child : node.children) {
-                        if (child.label.equals(newNode.label)) {
-                            child.examples.add(newNode.example);
+            //Добавочные узлы к корню
+            if(this.parent == null && !this.children.isEmpty() && !this.examples.contains(copyNewNode.example)){
+                if(this.children.get(0).attributeName.equals(copyNewNode.attributeName)) {
+                    for (Node child : children) {
+                        if (child.label.equals(copyNewNode.label)) {
+                            child.examples.add(copyNewNode.example);
+                            child.parent.examples.add(copyNewNode.example);
                             return;
                         }
                     }
+                    copyNewNode.parent = this;
+                    copyNewNode.parent.examples.add(copyNewNode.example);
+                    copyNewNode.level = copyNewNode.parent.level+1;
+                    this.children.add(copyNewNode);
+                    return;
                 }
-                //___________________________________________________________________________
-                //Если узла с таким классом нет, то нужно добавить класс в качестве дочернего
-                newNode.parent = node;
-                newNode.level = newNode.parent.level+1;
-                node.children.add(newNode);
-                return;
-                //___________________________________________________________________________
             }
-        }
-        else {
-            Node node = this.findParentForNewNode(newNode);
-            newNode.parent = node;
-            newNode.level = node.level+1;
-            node.children.add(newNode);
-            newNode.addAttributesToParrents(newNode.attributeName);
+            //Пошло добавление
+            //Если аттрибут уже есть в дереве, то нужно добавить пример в нужный аттрибут и в нужный класс
+            if(attributes.contains(copyNewNode.attributeName)){
+                Node node = this.findParentForNewNode(copyNewNode);
+                if(node != null){
+                    //Если такой класс уже существует, то просто добавляем пример в узел, и дополняем родительские примеры
+                    if(!children.isEmpty()) {
+                        for (Node child : node.children) {
+                            if (child.label.equals(copyNewNode.label)) {
+                                child.examples.add(copyNewNode.example);
+                                return;
+                            }
+                        }
+                    }
+                    //___________________________________________________________________________
+                    //Если узла с таким классом нет, то нужно добавить класс в качестве дочернего
+                    copyNewNode.parent = node;
+                    copyNewNode.level = copyNewNode.parent.level+1;
+                    node.children.add(copyNewNode);
+                    return;
+                    //___________________________________________________________________________
+                }
+            }
+            else {
+                Node node = this.findParentForNewNode(copyNewNode);
+                copyNewNode.parent = node;
+                copyNewNode.level = node.level+1;
+                node.children.add(copyNewNode);
+                copyNewNode.addAttributesToParrents(copyNewNode.attributeName);
 
+            }
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
         }
     }
 
