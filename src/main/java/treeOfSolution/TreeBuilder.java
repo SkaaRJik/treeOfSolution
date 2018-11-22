@@ -16,15 +16,40 @@ public class TreeBuilder {
         return tree;
     }
 
-    public void run(String[][] data){
+    public void run(String[][] data) {
         Node[][] nodes = DataFactory.convertDataToNode(data);
-        int countOfTrees = data[0].length * data[0].length-1;
-        List<Node> trees = new ArrayList<>();
-            //if(tree == null) tree = nodes[0][3];
+        int countOfTrees = data[0].length * (data[0].length - 1);
+        //if(tree == null) tree = nodes[0][3];
+        Node currentTree = null;
+        int firstIndex = 0;
+        int secondIndex = 1;
+        for (int k = 0; k < countOfTrees; k++) {
+            if(secondIndex >= nodes[0].length) {
+                secondIndex = 0;
+                firstIndex++;
+            }
+            try {
+                for (int i = 0; i < nodes.length; i++) {
+                    if (currentTree == null) currentTree = (Node) nodes[i][firstIndex].clone();
+                    currentTree.push(nodes[i][firstIndex]);
+                }
+                for (int i = 0; i < nodes.length; i++) {
+                    currentTree.push(nodes[i][secondIndex]);
+                }
+                if(this.tree == null) {
+                    this.tree = currentTree;
+                } else {
+                    if(this.tree.calculateIGToKnowBestTreeToStart() < currentTree.calculateIGToKnowBestTreeToStart()) this.tree = currentTree;
 
-            for(int k = 0 ; k < countOfTrees; k++) {
-                Node tree = null;
-                int afterHead = 0;
+                }
+                currentTree = null;
+                secondIndex++;
+                if(firstIndex == secondIndex) secondIndex++;
+            } catch (CloneNotSupportedException ex){
+                ex.printStackTrace();
+            }
+
+                /*int afterHead = 0;
                 for (int j = 0; j < nodes[0].length; j++) {
                     for (int i = 0; i < nodes.length; i++) {
                         if(tree == null) {
@@ -43,28 +68,9 @@ public class TreeBuilder {
                                 e.printStackTrace();
                             }
                         }
-                    }
+                    }*/
 
-                }
-            }
-
-        }
-            /*for (int j = 0; j < nodes.length; j++) {
-                for (int k = 0; k < nodes[0].length; k++) {
-
-                }
-                if(tree == null) {
-                    try {
-                        //tree = (Node) nodes[j][i].clone();
-                    } catch (CloneNotSupportedException e) {
-                        e.printStackTrace();
-                    }
-                }
-                //tree.push(nodes[j][i]);
-            }
-            trees.add(tree);*/
-            /*if(this.tree == null) this.tree = tree;
-            if(this.tree.calculateIGToKnowBestTreeToStart() < tree.calculateIGToKnowBestTreeToStart()) this.tree = tree;
-*/
         }
     }
+
+}
