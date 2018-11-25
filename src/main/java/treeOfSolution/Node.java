@@ -8,51 +8,100 @@ public class Node implements Cloneable{
     private Set<String> attributes;
     private String attributeName;
     private List<Node> children;
-    private List<Integer> examples;
+    private Set<Integer> examples;
     private int example;
-    private int level;
-    private List< List< List< Node > > > ierarchy;
+    private short level;
     private float E0;
     private float E;
-    private float IG;
-    private int countOfAttributes;
+    private short countOfAttributes;
+    float lastIG;
+    short depth;
 
 
-    public Node(String attributeName, String label, int example, int countOfAttributes) {
+
+    public Node(String attributeName, String label, int example, short countOfAttributes) {
         this.attributeName = attributeName;
         this.label = label;
         this.example = example;
-        this.examples = new ArrayList<>(10);
+        this.examples = new HashSet<>();
         this.examples.add(example);
         this.countOfAttributes = countOfAttributes;
         this.attributes = new HashSet<>();
         this.attributes.add(attributeName);
         this.children = new ArrayList<>();
-        float E0;
+        this.lastIG = -1;
     }
 
     @Override
     protected Object clone() throws CloneNotSupportedException {
         Node clone = new Node(this.attributeName, this.label, this.example, this.countOfAttributes);
+
+        clone.parent = null;
+        clone.label = this.label;
+        clone.attributes = new HashSet<>(this.attributes);
+        clone.attributeName = this.attributeName;
+        if(!this.children.isEmpty()){
+            ArrayList<Node> copiesOfChildren = new ArrayList<>();
+            for(Node child: children){
+                copiesOfChildren.add((Node) child.clone(clone));
+            }
+            clone.children = copiesOfChildren;
+        }
+        clone.examples = new HashSet<>(this.examples);
+        clone.level = this.level;
+        clone.E0 = 0;
+        clone.E = 0;
+        clone.countOfAttributes = this.countOfAttributes;
+        clone.lastIG = this.lastIG;
+        clone.depth = this.depth;
+        return clone;
+    }
+
+    protected Object clone(Node parent) throws CloneNotSupportedException {
+        Node clone = new Node(this.attributeName, this.label, this.example, this.countOfAttributes);
+
+        clone.parent = parent;
+        clone.label = this.label;
+        clone.attributes = new HashSet<>(this.attributes);
+        clone.attributeName = this.attributeName;
+        if(!this.children.isEmpty()){
+            ArrayList<Node> copiesOfChildren = new ArrayList<>();
+            for(Node child: children){
+                copiesOfChildren.add((Node) child.clone(clone));
+            }
+            clone.children = copiesOfChildren;
+        }
+        clone.examples = new HashSet<>(this.examples);
+        clone.level = this.level;
+        clone.E0 = 0;
+        clone.E = 0;
+        clone.countOfAttributes = this.countOfAttributes;
+        clone.lastIG = this.lastIG;
+        clone.depth = this.depth;
         return clone;
     }
 
 
-    public float calculateIGToKnowBestTreeToStart(){
-        float value = 0;
+    public float calculateIGToKnowBestTreeToStart() {
+        if (this.lastIG != -1) {
+            return this.lastIG;
+        }
 
-        if(this.attributes.size() == 2){
+        this.lastIG = 0;
+
+        if (this.attributes.size() == 2) {
             E0 = 0;
             float p;
-            for(Node child : children){
+            for (Node child : children) {
                 p = (float) child.examples.size() / this.examples.size();
                 E0 += (Math.log10(p) * p);
             }
             E0 *= -1;
-            for(Node child : children){
+            for (Node child : children) {
                 child.E = 0;
-                if(child.children.size() == 1) {continue;}
-                else {
+                if (child.children.size() == 1) {
+                    continue;
+                } else {
                     for (Node postChild : child.children) {
                         p = (float) postChild.examples.size() / child.examples.size();
                         child.E += Math.log10(p) * p;
@@ -60,14 +109,57 @@ public class Node implements Cloneable{
                     child.E *= -1;
                 }
             }
-            for(Node child : children){
-                value += child.E * (float) child.examples.size() / this.examples.size();
+            for (Node child : children) {
+                this.lastIG += child.E * (float) child.examples.size() / this.examples.size();
             }
 
         }
+        this.lastIG = E0 - this.lastIG;
 
-        return E0 - value;
+        return this.lastIG;
     }
+
+    void getAllNodesOnLevel(int level, List<Node> nodes){
+        for(Node child:this.children){
+            if(child.level < level) child.getAllNodesOnLevel(level, nodes);
+            if(child.level == level) nodes.add(child);
+        }
+    }
+
+    public float getIGOfLastAdding(){
+        return calculateIGForLevel(this.depth);
+    }
+
+    public float calculateIGForLevel(short level){
+        ArrayList<Node> nodesOnLevel = new ArrayList<>();
+        this.getAllNodesOnLevel((short) (level-1), nodesOnLevel);
+        this.E0 = 0;
+        this.lastIG = 0;
+        float IG = 0;
+        for(Node parent : nodesOnLevel){
+            float pForE0 = (float)parent.examples.size()/this.examples.size();
+            parent.E0 = (float) -(pForE0*Math.log10(pForE0));
+            float totalE = 0;
+            for(Node child : parent.children){
+                float p = (float)child.examples.size()/parent.examples.size();
+                child.E += -(p*Math.log10(p));
+                totalE += child.E;
+
+            }
+            IG += pForE0 * totalE;
+        }
+        float totalE0 = 0;
+        for(Node parent: nodesOnLevel){
+            totalE0 += parent.E0;
+        }
+        IG = totalE0 - IG;
+        this.lastIG = IG;
+
+        return this.lastIG;
+    }
+
+
+
 
     public double log(float x, int base) {
         return (Math.log(x) / Math.log(base));
@@ -89,6 +181,10 @@ public class Node implements Cloneable{
         return Objects.hash(label, attributeName, example, level);
     }
 
+    public void setDepth(short currentMaxLevel){
+        if(this.depth < currentMaxLevel) this.depth = currentMaxLevel;
+    }
+
     public void push(Node newNode){
         try {
             Node copyNewNode = (Node) newNode.clone();
@@ -105,6 +201,7 @@ public class Node implements Cloneable{
                     this.level = 0;
                     copyNode.level = 1;
 
+                    this.setDepth((short) 1);
                     this.label = "HEAD";
 
                         /*copyNewNode.examples.add(copyNewNode.example);
@@ -128,7 +225,8 @@ public class Node implements Cloneable{
                     }
                     copyNewNode.parent = this;
                     copyNewNode.parent.examples.add(copyNewNode.example);
-                    copyNewNode.level = copyNewNode.parent.level+1;
+                    copyNewNode.level = (short) (copyNewNode.parent.level+1);
+                    this.setDepth(copyNewNode.level);
                     this.children.add(copyNewNode);
                     return;
                 }
@@ -139,9 +237,11 @@ public class Node implements Cloneable{
                 Node node = this.findParentForNewNode(copyNewNode);
                 if(node != null){
                     //Если такой класс уже существует, то просто добавляем пример в узел, и дополняем родительские примеры
-                    if(!children.isEmpty()) {
+                    if(!node.children.isEmpty()) {
                         for (Node child : node.children) {
                             if (child.label.equals(copyNewNode.label)) {
+                                copyNewNode.level = child.level;
+                                this.setDepth(copyNewNode.level);
                                 child.examples.add(copyNewNode.example);
                                 return;
                             }
@@ -150,8 +250,10 @@ public class Node implements Cloneable{
                     //___________________________________________________________________________
                     //Если узла с таким классом нет, то нужно добавить класс в качестве дочернего
                     copyNewNode.parent = node;
-                    copyNewNode.level = copyNewNode.parent.level+1;
+                    copyNewNode.level = (short) (copyNewNode.parent.level+1);
+                    this.setDepth(copyNewNode.level);
                     node.children.add(copyNewNode);
+                    copyNewNode.addAttributesToParrents(copyNewNode.attributeName);
                     return;
                     //___________________________________________________________________________
                 }
@@ -159,7 +261,8 @@ public class Node implements Cloneable{
             else {
                 Node node = this.findParentForNewNode(copyNewNode);
                 copyNewNode.parent = node;
-                copyNewNode.level = node.level+1;
+                copyNewNode.level = (short) (node.level+1);
+                this.setDepth(copyNewNode.level);
                 node.children.add(copyNewNode);
                 copyNewNode.addAttributesToParrents(copyNewNode.attributeName);
 
@@ -170,36 +273,47 @@ public class Node implements Cloneable{
     }
 
     Node findParentForNewNode(Node newNode){
-        Node parentNode = null;
-        //if(this.attributes.size() == 2 &&  this.attributes.contains(newNode.attributeName) && this.examples.contains(newNode.example)) return this;
-
-        if(this.attributes.size() == 1 &&  !this.attributes.contains(newNode.attributeName)){
-            if(children != null) {
-                if(!children.isEmpty())
-                    for(Node child : this.children) {
-                        if(child.examples.contains(newNode.example))
-                            return child;
-                    }
+        if(this.children.size() > 0){
+            for(Node child : this.children){
+                if(child.examples.contains(newNode.example)){
+                    if(child.attributes.size() == 2 && child.attributes.contains(newNode.attributeName)) return child;
+                    /*if(child.attributes.size() == 2 && !child.attributes.contains(newNode.attributeName)) return child.findParentForNewNode(newNode);
+                    if(child.attributes.contains(newNode.attributeName)) return child.findParentForNewNode(newNode);*/
+                    return child.findParentForNewNode(newNode);
+                }
             }
         }
-        if(children != null) {
-            if(!children.isEmpty())
-                for(Node child : this.children) {
-                    if(child.examples.contains(newNode.example) && child.attributes.contains(newNode.attributeName))
-                        return child.findParentForNewNode(newNode);
-                    else if(child.examples.contains(newNode.example) && !child.attributes.contains(newNode.attributeName))
-                        return child;
-                }
+        return this;
+    }
 
-        }
-        return parentNode;
+    public float getLastIG() {
+        return lastIG;
     }
 
     void addAttributesToParrents(String attributeName){
+        this.attributes.add(attributeName);
         if(this.parent != null) {
-            this.parent.attributes.add(attributeName);
             this.parent.addAttributesToParrents(attributeName);
         }
     }
 
+    void deleteAttributeFromTree(String attributeName){
+        this.attributes.remove(attributeName);
+        if(this.parent != null){
+            this.parent.deleteAttributeFromTree(attributeName);
+        }
+    }
+
+    public void deleteLastLevel(String nameOfLastLevel) {
+        List<Node> parents = new ArrayList<>();
+        getAllNodesOnLevel(depth-1, parents);
+        for(Node parent : parents){
+            parent.deleteAttributeFromTree(nameOfLastLevel);
+            parent.children = new ArrayList<>(parent.children.size());
+        }
+    }
+
+    public String getAttributeName() {
+        return attributeName;
+    }
 }

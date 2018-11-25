@@ -32,7 +32,7 @@ public class DataFactory {
 
         for (int i = 0; i < data.length-1; i++) {
             for (int j = 0; j < data[i].length; j++) {
-                nodes[i][j] = new Node(data[0][j], data[i+1][j], i+1, data[0].length);
+                nodes[i][j] = new Node(data[0][j], data[i+1][j], i+1, (short) data[0].length);
             }
         }
 
